@@ -307,7 +307,23 @@ def load_model_and_validate_gpu(model_path, tokenizer_path=None):
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     print("Started loading model")
     model = AutoModelForCausalLM.from_pretrained(model_path, device_map='auto',
-                                                 torch_dtype=torch.bfloat16, low_cpu_mem_usage=True)
+                                                #  load_in_8bit=True,
+                                                 torch_dtype=torch.bfloat16, 
+                                                 low_cpu_mem_usage=True)
+    
+    print("\nGPU memory after loading:")
+    print(f"Allocated: {torch.cuda.memory_allocated(0) / 1024**3:.2f} GB")
+    
+    print("\nDevice map:")
+    print(f"length: {len(model.hf_device_map)}")
+    print(model.hf_device_map)
+    
+    # Check if anything is on CPU
+    cpu_layers = [k for k, v in model.hf_device_map.items() if v == 'cpu']
+    if cpu_layers:
+        print(f"\nLayers on CPU ({len(cpu_layers)}):")
+        print(cpu_layers[:5], "..." if len(cpu_layers) > 5 else "")
+
     assert ('cpu' not in model.hf_device_map.values())
     return model, tokenizer
 

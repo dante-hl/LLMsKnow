@@ -502,6 +502,11 @@ def main():
         else:
             all_questions = preprocess_fn(args.model, all_questions, labels)
 
+    # each returned value is a list, whose individual elements are:
+    # model_answers: model answers as strings
+    # input_output_ids: list of indices representing tokens of entire sequence (both input and output), one list per question/answer
+    # all_scores: logits for all generated tokens in an answer, arranged in a tensor of shape (num_generated_tokens, vocab_size)
+    # all_output_ids: list of indices representing tokens of generated output, one list per question/answer
     model_answers, input_output_ids, all_scores, all_output_ids = generate_model_answers(all_questions, model,
                                                                                          tokenizer, device, args.model,
                                                                                          output_scores=True, max_new_tokens=max_new_tokens,
@@ -533,6 +538,15 @@ def main():
     print("Saving answers to ", file_path_answers)
 
     pd.DataFrame.from_dict(output_csv).to_csv(file_path_answers)
+
+    # so running this file produces a CSV with the following columns:
+
+    # question: each question, as a string
+    # model_answer: each generated answer to the question, as a string
+    # correct_answer: ground truth answer to question (from dataset)
+    # automatic_correctness: 
+
+    # TODO: confirm this by doing a test run with one of the built in models (run on a limited number of examples)
 
     print("Saving input output ids to ", file_path_output_ids)
     torch.save(input_output_ids, file_path_output_ids)
